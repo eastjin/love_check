@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>연애 헌법재판소</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap">
+<style>
+/* Layout: 한 장짜리 카드 앱 — 시작 → 질문 8개(한 장씩) → 결과 카드 */
+:root{
+  --bg:#E8F3FF; --card:#FFFFFF; --ink:#1D2547; --muted:#5B6488;
+  --line:#CFDDF2; --coral:#FF5C7C; --sun:#FFC93C; --mint:#3CCB9A; --sky:#4C8DFF;
+  --soft:#F3F7FF;
+  --display:"Jua","Gowun Dodum",system-ui,sans-serif;
+  --body:"Gowun Dodum","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121A33; --card:#1C2547; --ink:#F2F5FF; --muted:#A9B3D6;
+  --line:#2F3B68; --coral:#FF7A93; --sun:#FFD15C; --mint:#4FDBAA; --sky:#79A9FF; --soft:#232E57;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121A33; --card:#1C2547; --ink:#F2F5FF; --muted:#A9B3D6;
+  --line:#2F3B68; --coral:#FF7A93; --sun:#FFD15C; --mint:#4FDBAA; --sky:#79A9FF; --soft:#232E57;
+  color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 40px;
+  background-image:radial-gradient(var(--line) 1.5px,transparent 1.5px);background-size:22px 22px}
+.wrap{max-width:460px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.card{background:var(--card);border:3px solid var(--ink);border-radius:22px;padding:24px 20px;box-shadow:6px 6px 0 var(--ink)}
+h1,h2,.display{font-family:var(--display);font-weight:400;text-wrap:balance;margin:0}
+h1{font-size:2.1rem;line-height:1.2}
+h2{font-size:1.5rem;line-height:1.3}
+p{margin:0}
+.muted{color:var(--muted)}
+.tag{display:inline-block;font-family:var(--display);font-size:.85rem;letter-spacing:.04em;background:var(--sun);color:#1D2547;
+  border:2px solid var(--ink);border-radius:999px;padding:2px 12px}
+.stack{display:flex;flex-direction:column;gap:12px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+button{font:inherit;cursor:pointer;color:var(--ink)}
+.btn{font-family:var(--display);font-size:1.15rem;border:3px solid var(--ink);border-radius:16px;padding:12px 18px;
+  background:var(--coral);color:#fff;box-shadow:4px 4px 0 var(--ink);transition:transform .1s, box-shadow .1s}
+.btn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
+.btn.ghost{background:var(--card);color:var(--ink)}
+.btn:focus-visible,.opt:focus-visible{outline:3px solid var(--sky);outline-offset:3px}
+.btn.wide{width:100%}
+
+/* 시작 화면 */
+.hero-chars{display:flex;justify-content:center;gap:6px;font-size:2.4rem;line-height:1}
+.hero-chars span{display:inline-block;animation:bob 2.4s ease-in-out infinite}
+.hero-chars span:nth-child(2){animation-delay:.3s}.hero-chars span:nth-child(3){animation-delay:.6s}.hero-chars span:nth-child(4){animation-delay:.9s}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.list{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:.85rem;background:var(--soft);border:2px solid var(--line);border-radius:999px;padding:2px 10px}
+
+/* 질문 */
+.progress{height:14px;border:2.5px solid var(--ink);border-radius:999px;background:var(--card);overflow:hidden}
+.progress i{display:block;height:100%;background:var(--mint);width:0;transition:width .3s}
+.qhead{display:flex;justify-content:space-between;align-items:center;font-family:var(--display);color:var(--muted)}
+.scene{font-size:2.6rem;line-height:1}
+.qtitle{font-family:var(--display);font-size:1rem;color:var(--coral)}
+.opt{display:flex;align-items:center;gap:12px;text-align:left;width:100%;background:var(--soft);border:2.5px solid var(--ink);border-radius:16px;
+  padding:12px 14px;font-size:1rem;transition:transform .1s, background .15s}
+.opt b{font-family:var(--display);font-weight:400;font-size:1.4rem;width:1.6em;text-align:center;flex:none}
+@media (hover:hover){.opt:hover{background:var(--card);transform:translateX(3px)}}
+.opt.picked{background:var(--sun);color:#1D2547}
+.opt.picked::after{content:"✔ 내 판결";margin-left:auto;font-family:var(--display);font-size:.85rem;flex:none}
+.back{background:none;border:none;color:var(--muted);text-decoration:underline;padding:4px;align-self:flex-start}
+
+/* 결과 */
+.result-top{text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px}
+.face{font-size:4.5rem;line-height:1;width:120px;height:120px;display:grid;place-items:center;border:3px solid var(--ink);border-radius:50%;background:var(--sun)}
+.code{font-family:var(--display);font-size:1rem;letter-spacing:.12em;color:var(--muted)}
+.quote{font-family:var(--display);font-size:1.15rem;background:var(--soft);border-radius:14px;padding:10px 14px}
+.meter{display:flex;flex-direction:column;gap:6px}
+.meter .lbl{display:flex;justify-content:space-between;font-size:.9rem}
+.meter .lbl strong{font-family:var(--display);font-weight:400}
+.bar{position:relative;height:16px;border:2.5px solid var(--ink);border-radius:999px;background:linear-gradient(90deg,var(--mint),var(--sun),var(--coral))}
+.bar i{position:absolute;top:50%;width:22px;height:22px;border:3px solid var(--ink);border-radius:50%;background:var(--card);transform:translate(-50%,-50%);transition:left .6s}
+ul.traits{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:4px}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pair div{background:var(--soft);border-radius:14px;padding:10px 12px;min-width:0}
+.pair small{display:block;color:var(--muted);font-size:.8rem}
+.pair span{font-family:var(--display)}
+.answers{display:flex;flex-direction:column;gap:6px;font-size:.92rem}
+.answers div{display:flex;justify-content:space-between;gap:10px;border-bottom:1.5px dashed var(--line);padding-bottom:6px}
+.answers em{font-style:normal;font-family:var(--display);flex:none}
+.types{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.types div{background:var(--soft);border:2px solid var(--line);border-radius:14px;padding:10px;text-align:center;min-width:0}
+.types .big{font-size:2rem;line-height:1.2}
+.types .nm{font-family:var(--display);font-size:1rem}
+.types .cd{font-size:.75rem;color:var(--muted);letter-spacing:.08em}
+.types div.me{border-color:var(--coral);border-width:3px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);
+  font-family:var(--display);padding:8px 16px;border-radius:999px}
+.field{display:flex;flex-direction:column;gap:6px;font-family:var(--display)}
+.field input{font:inherit;font-family:var(--body);font-size:1rem;color:var(--ink);background:var(--soft);border:2.5px solid var(--ink);border-radius:14px;padding:10px 12px;width:100%}
+.field input:focus-visible{outline:3px solid var(--sky);outline-offset:2px}
+.score{font-family:var(--display);font-size:2.6rem;line-height:1;color:var(--coral)}
+.score small{font-size:1rem;color:var(--muted)}
+.cmp{display:flex;flex-direction:column;gap:6px;font-size:.92rem}
+.cmp div{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;border-bottom:1.5px dashed var(--line);padding-bottom:6px}
+.cmp div span{min-width:0}
+.cmp div.diff{background:var(--soft);border-radius:10px;padding:6px 8px;border-bottom:none}
+.cmp em{font-style:normal;font-family:var(--display);text-align:center;min-width:3.4em}
+.cmp .hd{font-family:var(--display);color:var(--muted);border-bottom:none}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- 시작 -->
+  <section id="start" class="card stack">
+    <span class="tag" style="align-self:flex-start">연애 사건 15건 접수</span>
+    <h1>연애<br>헌법재판소</h1>
+    <div class="hero-chars" aria-hidden="true"><span>🐼</span><span>🦐</span><span>🦔</span><span>🐡</span></div>
+    <p>애인이 이성 친구에게 이것까지 해줘도 될까? 15건의 사건을 직접 판결하면 나의 연애 질투 유형 4가지 중 하나가 나와요.</p>
+    <button class="btn wide" id="go" type="button">재판 시작! 땡땡땡</button>
+    <p class="muted" style="font-size:.85rem">재미로만 보세요. 진지하게 싸우지 말기 약속 🤙</p>
+  </section>
+
+  <!-- 친구 판결문 도착 -->
+  <section id="friend" class="card stack" hidden>
+    <span class="tag" style="align-self:flex-start">판결문 도착</span>
+    <div class="result-top">
+      <h1 id="fname">친구의 판결</h1>
+      <div class="face" id="fface">🐼</div>
+      <h2 id="ftype"></h2>
+      <p class="quote" id="fquote"></p>
+    </div>
+    <p id="fdesc">애인이 이성 친구에게 이것까지 해줘도 될까? 같은 15건의 사건을 직접 판결하면, 둘의 판결이 어디서 갈렸는지 비교해 드려요.</p>
+    <button class="btn wide" id="fgo" type="button">재판 하기</button>
+    <p class="muted" style="font-size:.85rem">상대 답변은 내 재판이 끝난 뒤에 공개돼요.</p>
+  </section>
+
+  <!-- 질문 -->
+  <section id="quiz" class="card stack" hidden>
+    <div class="qhead"><span id="qnum">사건 1 / 15</span><span id="qcat">챙김 논쟁</span></div>
+    <div class="progress" aria-hidden="true"><i id="bar"></i></div>
+    <div class="scene" id="qemoji" aria-hidden="true">🌿</div>
+    <p class="qtitle" id="qtitle">깻잎 논쟁</p>
+    <h2 id="qtext">질문</h2>
+    <div class="stack" id="opts"></div>
+    <button class="back" id="back" type="button">← 이전 질문</button>
+  </section>
+
+  <!-- 결과 -->
+  <section id="result" class="stack" hidden>
+    <div class="card stack">
+      <div class="result-top">
+        <span class="tag">최종 판결</span>
+        <div class="face" id="rface">🐼</div>
+        <p class="code" id="rcode">OPEN · OPEN</p>
+        <h1 id="rname">쿨쿨 판다형</h1>
+        <p class="quote" id="rquote">"깻잎? 열 장 떼줘도 돼~"</p>
+      </div>
+      <p id="rdesc"></p>
+      <div class="meter">
+        <div class="lbl"><strong>챙김 질투도</strong><span class="muted" id="m1t">0%</span></div>
+        <div class="bar"><i id="m1"></i></div>
+        <div class="lbl muted" style="font-size:.78rem"><span>깻잎 열 장 OK</span><span>젓가락도 못 대</span></div>
+      </div>
+      <div class="meter">
+        <div class="lbl"><strong>거리 질투도</strong><span class="muted" id="m2t">0%</span></div>
+        <div class="bar"><i id="m2"></i></div>
+        <div class="lbl muted" style="font-size:.78rem"><span>단둘이 밥 OK</span><span>좋아요도 안 돼</span></div>
+      </div>
+      <ul class="traits" id="rtraits"></ul>
+      <div class="pair">
+        <div><small>찰떡 궁합</small><span id="rbest"></span></div>
+        <div><small>싸움 예약</small><span id="rworst"></span></div>
+      </div>
+      <label class="field" for="nick"><span>내 이름 (판결문에 들어가요)</span>
+        <input id="nick" type="text" maxlength="10" placeholder="예: 깻잎장인" autocomplete="nickname"></label>
+      <div class="row">
+        <button class="btn" id="copy" type="button" style="flex:1">판결문 링크 복사</button>
+        <button class="btn ghost" id="retry" type="button" style="flex:1">다시 하기</button>
+      </div>
+    </div>
+
+    <div class="card stack" id="compare" hidden>
+      <h2 id="cmpTitle">판결 비교</h2>
+      <p class="score" id="cmpScore"></p>
+      <p id="cmpMsg"></p>
+      <div class="cmp" id="cmpList"></div>
+    </div>
+
+    <div class="card stack">
+      <h2>내 답변 다시 보기</h2>
+      <div class="answers" id="answers"></div>
+    </div>
+
+    <div class="card stack">
+      <h2>4가지 유형 전체</h2>
+      <div class="types" id="alltypes"></div>
+    </div>
+  </section>
+</div>
+<div class="toast" id="toast" hidden>복사 완료!</div>
+
+<script>
+// axis: c = 챙김(몸으로 해주는 것), d = 거리(단둘이·밤·온라인)
+const Q = [
+  {a:"c", e:"🌿", t:"깻잎 논쟁", q:"셋이 고기를 먹는데 내 친구(나와 같은 성별)가 깻잎을 못 떼고 있다. 애인이 젓가락으로 잡아준다."},
+  {a:"d", e:"🍝", t:"1:1 밥 논쟁", q:"애인이 이성 사람친구랑 단둘이 파스타를 먹고 왔다. 미리 말은 했다."},
+  {a:"c", e:"🦐", t:"새우 논쟁", q:"애인이 옆자리 이성 친구 새우 껍질을 까서 접시에 올려준다."},
+  {a:"d", e:"🌙", t:"데려다주기 논쟁", q:"술자리가 끝났다. 애인이 취한 이성 친구를 집 앞까지 데려다준다."},
+  {a:"d", e:"🚗", t:"조수석 논쟁", q:"애인이 운전하는 차 조수석에 이성 친구가 탔다. 나는 그 자리에 없었다."},
+  {a:"c", e:"❄️", t:"패딩 지퍼 논쟁", q:"추워 보이는 이성 친구의 패딩 지퍼를 애인이 쭉 올려준다."},
+  {a:"d", e:"💬", t:"새벽 카톡 논쟁", q:"애인이 이성 친구랑 새벽 2시까지 카톡을 주고받았다. 내용은 평범한 수다."},
+  {a:"d", e:"🏠", t:"자취방 논쟁", q:"애인이 이성 친구 자취방 집들이에 간다. 다른 친구들도 같이 간다."},
+  {a:"c", e:"🧥", t:"외투 논쟁", q:"추워서 덜덜 떠는 이성 친구에게 애인이 자기 겉옷을 벗어서 걸쳐준다."},
+  {a:"d", e:"🎬", t:"단둘이 영화 논쟁", q:"내가 안 좋아하는 장르라서, 애인이 이성 친구랑 단둘이 그 영화를 보러 갔다."},
+  {a:"c", e:"☂️", t:"우산 논쟁", q:"비 오는 날, 우산 없는 이성 동기를 애인이 자기 우산에 씌워 역까지 간다."},
+  {a:"d", e:"🎁", t:"생일 선물 논쟁", q:"애인이 이성 친구 생일에 따로 선물을 사서 챙겨줬다."},
+  {a:"c", e:"💇", t:"머리카락 논쟁", q:"이성 친구 머리에 먼지가 붙어 있다. 애인이 손으로 떼어준다."},
+  {a:"d", e:"💔", t:"전 애인 논쟁", q:"애인이 전 애인과 지금도 친구로 지내며 가끔 연락한다."},
+  {a:"d", e:"💪", t:"SNS 좋아요 논쟁", q:"애인이 몸 좋은 이성의 운동 사진에 좋아요를 눌렀다."},
+];
+const OPTS = [
+  {s:0, k:"ㅇㅋ", l:"그럴 수 있지~ 아무렇지 않음"},
+  {s:1, k:"음…", l:"괜찮긴 한데 나중에 한마디 함"},
+  {s:2, k:"헤어져", l:"절대 안 됨. 이건 선 넘었다"},
+];
+const TYPES = {
+  OO:{f:"🐼", bg:"var(--mint)", code:"관대 · 관대", name:"쿨쿨 판다형",
+    quote:"\"깻잎? 열 장 떼줘도 돼~\"",
+    desc:"질투라는 단어를 사전에서 처음 본 사람. 애인이 누굴 챙기든, 누구랑 밥을 먹든 대나무만 씹고 있어요. 믿음이 단단한 건 장점이지만, 가끔 애인이 '나한테 관심 없어?' 하고 서운해할 수 있어요.",
+    traits:["애인 폰 비번 몰라도 안 궁금함","'그 사람 누구야?' 대신 '재밌었어?'를 물어봄","질투해 달라는 말을 들어본 적 있음"],
+    best:"🦔 위치추적 고슴도치형", worst:"🐡 질투 폭발 복어형"},
+  XO:{f:"🦐", bg:"var(--coral)", code:"철벽 · 관대", name:"껍질 수호대형",
+    quote:"\"만나는 건 OK, 새우는 내가 깐다\"",
+    desc:"단둘이 밥 먹는 건 괜찮은데, 손으로 뭘 해주는 건 절대 안 돼요. 깻잎, 새우, 지퍼처럼 '챙겨주는 손길'은 애인 전용이라고 생각하는 타입. 겉은 쿨한데 식탁 위에서 눈빛이 매서워져요.",
+    traits:["고기집에서 애인 젓가락 위치를 관찰함","'밥은 먹어도 돼. 근데 새우는?'","챙김은 연인의 특권이라고 믿음"],
+    best:"🐼 쿨쿨 판다형", worst:"🦔 위치추적 고슴도치형"},
+  OX:{f:"🦔", bg:"var(--sky)", code:"관대 · 철벽", name:"위치추적 고슴도치형",
+    quote:"\"깻잎은 떼줘도 돼. 근데 지금 어디야?\"",
+    desc:"여럿이 있을 때 챙겨주는 건 그냥 매너라고 봐요. 대신 단둘이, 밤늦게, 몰래 누르는 좋아요에는 가시가 바짝 서요. 눈앞의 행동보다 보이지 않는 거리가 신경 쓰이는 타입.",
+    traits:["'몇 시에 들어가?' 장인","좋아요 목록을 우연히(?) 본 적 있음","새우 까주는 건 오히려 귀엽다고 생각함"],
+    best:"🐼 쿨쿨 판다형", worst:"🦐 껍질 수호대형"},
+  XX:{f:"🐡", bg:"var(--sun)", code:"철벽 · 철벽", name:"질투 폭발 복어형",
+    quote:"\"깻잎 한 장에 볼이 빵빵\"",
+    desc:"깻잎도, 새우도, 좋아요도 다 안 돼요! 사랑이 커서 볼도 커지는 타입. 애인 입장에선 '나만 보는구나' 싶어 설레기도 하지만, 너무 빵빵해지면 둘 다 숨이 차요. 가끔은 바람을 빼고 대화하기.",
+    traits:["애인 이성 친구 이름을 다 외움","질투하고 나서 바로 미안해짐","연애 논쟁 영상 댓글에 진심으로 참전함"],
+    best:"🐡 질투 폭발 복어형 (서로 이해함)", worst:"🐼 쿨쿨 판다형"},
+};
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[ch]));
+let idx = 0, ans = [], friend = null;
+
+// 공유 링크: #r<답 15자리>n<이름 hex>  (링크에서 읽히는 문자만 사용)
+const ARTIFACT_URL = "https://claude.ai/artifact/HomRQs1KaZj43PTXtn7cuC";
+function shareBase(){
+  const inViewer = window.claude || !/^https?:$/.test(location.protocol) || /claude|anthropic|usercontent/.test(location.hostname);
+  return inViewer ? ARTIFACT_URL : location.origin + location.pathname;
+}
+const toHex = s => Array.from(new TextEncoder().encode(s)).map(b => b.toString(16).padStart(2,"0")).join("");
+function fromHex(h){ try { return new TextDecoder().decode(new Uint8Array(h.match(/../g).map(x => parseInt(x,16)))); } catch(e){ return ""; } }
+function makeLink(arr, name){ return shareBase() + "#r" + arr.join("") + (name ? "n" + toHex(name) : ""); }
+function readLink(){
+  const m = location.hash.match(new RegExp("^#r([0-2]{" + Q.length + "})(?:n([0-9a-f]{2,60}))?$"));
+  if (!m) return null;
+  return { ans: m[1].split("").map(Number), name: m[2] ? fromHex(m[2]).trim() : "" };
+}
+
+function calc(arr){
+  let c = 0, d = 0;
+  Q.forEach((q,i) => q.a === "c" ? c += arr[i] : d += arr[i]);
+  const cMax = Q.filter(q => q.a === "c").length * 2, dMax = Q.filter(q => q.a === "d").length * 2;
+  const key = (c / cMax >= 0.5 ? "X" : "O") + (d / dMax >= 0.5 ? "X" : "O");
+  return { key, t: TYPES[key], p1: Math.round(c/cMax*100), p2: Math.round(d/dMax*100) };
+}
+
+function show(id){ ["start","friend","quiz","result"].forEach(s => $(s).hidden = s !== id); window.scrollTo(0,0); }
+
+function renderQ(){
+  const q = Q[idx];
+  $("qnum").textContent = `사건 ${idx+1} / ${Q.length}`;
+  $("qcat").textContent = q.a === "c" ? "챙김 논쟁" : "거리 논쟁";
+  $("bar").style.width = `${(idx/Q.length)*100}%`;
+  $("qemoji").textContent = q.e;
+  $("qtitle").textContent = q.t;
+  $("qtext").textContent = q.q;
+  $("back").hidden = idx === 0;
+  const box = $("opts"); box.innerHTML = ""; delete box.dataset.busy;
+  if (document.activeElement) document.activeElement.blur();
+  OPTS.forEach(o => {
+    const b = document.createElement("button");
+    const picked = ans[idx] === o.s;
+    b.type = "button"; b.className = "opt" + (picked ? " picked" : "");
+    b.setAttribute("aria-pressed", picked);
+    b.innerHTML = `<b>${o.k}</b><span>${o.l}</span>`;
+    b.onclick = () => {
+      if (box.dataset.busy) return;
+      box.dataset.busy = "1";
+      ans[idx] = o.s;
+      box.querySelectorAll(".opt").forEach(x => x.classList.remove("picked"));
+      b.classList.add("picked");
+      setTimeout(() => { idx++; idx < Q.length ? renderQ() : renderResult(); }, 250);
+    };
+    box.appendChild(b);
+  });
+}
+
+function renderResult(){
+  const { key, t, p1, p2 } = calc(ans);
+  $("rface").textContent = t.f; $("rface").style.background = t.bg;
+  $("rcode").textContent = t.code;
+  $("rname").textContent = t.name;
+  $("rquote").textContent = t.quote;
+  $("rdesc").textContent = t.desc;
+  $("rtraits").innerHTML = t.traits.map(x => `<li>${x}</li>`).join("");
+  $("rbest").textContent = t.best; $("rworst").textContent = t.worst;
+  $("m1t").textContent = p1 + "%"; $("m2t").textContent = p2 + "%";
+  $("m1").style.left = "0%"; $("m2").style.left = "0%";
+  requestAnimationFrame(() => { $("m1").style.left = p1 + "%"; $("m2").style.left = p2 + "%"; });
+  $("answers").innerHTML = Q.map((q,i) => `<div><span>${q.e} ${q.t}</span><em>${OPTS[ans[i]].k}</em></div>`).join("");
+  $("alltypes").innerHTML = Object.entries(TYPES).map(([k,v]) =>
+    `<div class="${k===key?"me":""}"><div class="big">${v.f}</div><div class="nm">${v.name}</div><div class="cd">${v.code}</div></div>`).join("");
+  renderCompare();
+  show("result");
+}
+
+function renderCompare(){
+  if (!friend){ $("compare").hidden = true; return; }
+  const who = friend.name || "친구";
+  const same = Q.filter((q,i) => ans[i] === friend.ans[i]).length;
+  const ft = calc(friend.ans).t;
+  $("cmpTitle").textContent = `나 vs ${who} 판결 비교`;
+  $("cmpScore").innerHTML = `${same}<small> / ${Q.length}건 일치</small>`;
+  const msg = same >= 13 ? "판결이 거의 똑같아요. 이 정도면 같은 재판관." :
+              same >= 9  ? "대체로 비슷해요. 몇 건만 합의 보면 평화." :
+              same >= 5  ? "꽤 갈려요. 깻잎 앞에서 조심하기." :
+                           "판결이 정반대예요. 고기집은 당분간 금지.";
+  const last = who.charCodeAt(who.length - 1);
+  const josa = (last >= 0xAC00 && last <= 0xD7A3 && (last - 0xAC00) % 28) ? "은" : "는";
+  $("cmpMsg").textContent = `${who}${josa} ${ft.f} ${ft.name}. ${msg}`;
+  $("cmpList").innerHTML = `<div class="hd"><span>사건</span><em>나</em><em>${esc(who)}</em></div>` +
+    Q.map((q,i) => `<div class="${ans[i]===friend.ans[i]?"":"diff"}"><span>${q.e} ${q.t}</span><em>${OPTS[ans[i]].k}</em><em>${OPTS[friend.ans[i]].k}</em></div>`).join("");
+  $("compare").hidden = false;
+}
+
+function copyText(){
+  const { t, p1, p2 } = calc(ans);
+  const name = $("nick").value.trim();
+  const link = makeLink(ans, name);
+  return `[연애 헌법재판소]\n${name ? name + "의" : "나의"} 판결: ${t.f} ${t.name}\n${t.quote}\n챙김 질투도 ${p1}% · 거리 질투도 ${p2}%\n\n내 판결문 보고 너도 재판해 봐\n${link}`;
+}
+
+function startQuiz(){ idx = 0; ans = []; show("quiz"); renderQ(); }
+$("go").onclick = startQuiz;
+$("fgo").onclick = startQuiz;
+$("back").onclick = () => { if (idx > 0){ idx--; renderQ(); } };
+$("retry").onclick = () => show(friend ? "friend" : "start");
+$("copy").onclick = async () => {
+  const txt = copyText();
+  try { await navigator.clipboard.writeText(txt); toast("링크 복사 완료! 친구한테 보내봐"); }
+  catch(e){ toast("복사가 막혔어요. 결과 화면을 캡처해 주세요"); }
+};
+try { const saved = localStorage.getItem("nick"); if (saved) $("nick").value = saved; } catch(e){}
+$("nick").addEventListener("input", () => { try { localStorage.setItem("nick", $("nick").value); } catch(e){} });
+
+// 공유 링크로 들어온 경우
+friend = readLink();
+if (friend){
+  const ft = calc(friend.ans).t;
+  const who = friend.name || "친구";
+  $("fname").textContent = `${who}의 판결`;
+  $("fface").textContent = ft.f; $("fface").style.background = ft.bg;
+  $("ftype").textContent = ft.name;
+  $("fquote").textContent = ft.quote;
+  show("friend");
+}
+function toast(m){ const t=$("toast"); t.textContent=m; t.hidden=false; clearTimeout(t._h); t._h=setTimeout(()=>t.hidden=true,1800); }
+</script>
+</body>
+</html>
